@@ -1,0 +1,256 @@
+#!/usr/bin/perl -w
+######################################################################
+# $Id: blog_amwish,v 1.1 2005/02/18 02:49:54 nstudt Exp $
+# $Date: 2005/02/18 02:49:54 $
+######################################################################
+use strict;
+
+use Getopt::Long;
+use Net::Amazon;
+use Net::Amazon::Request::Wishlist;
+
+use KrKit::HTML qw( :all );
+
+######################################################################
+# Functions                                                          #
+######################################################################
+
+#-----------------------------------------
+# help()
+#-----------------------------------------
+sub help() {
+
+	print	"USAGE: blog_amwish [options]\n",
+			"	-e|--extended            URL links to extended entry\n",
+			"	-f|--file <file>         Output file (Default: STDOUT)\n",
+			"	-h|--help                Display this usage\n",
+			"	-l|--length <integer>    Object name length\n",
+			"	-m|--maxpages <integer>  Maximum pages to retrieve\n",
+			"	-p|--preferences <file>  Pref. file (Default: ~/.amwishrc)\n",
+			"	-t|--token <token>       Amazon token\n",
+			"	-w|--wishlist <wishlist> Amazon wishlist id\n";
+
+	exit;
+
+} # END help
+
+######################################################################
+# Main Execution Begins Here                                         #
+######################################################################
+eval {
+	my $token;				# Amazon Subscriber ID
+	my $wishlist;			# Wishlist ID
+	my $maxpages = 5;		# Maximum pages to return
+	my $extended;			# Link to extended or abbreviated entry
+	my $file;				# Output file
+	my $rc_file;			# Preferences file
+	my $length = 0;			# Name length
+
+	$rc_file = "$ENV{HOME}/.amwishrc";
+
+	# Read variables from command line
+	GetOptions(	'help|h'			=> sub { help() },
+				'token|t=s'			=> \$token,
+				'wishlist|w=s'		=> \$wishlist,
+				'maxpages|m=i'		=> \$maxpages,
+				'extended|e'		=> \$extended,
+				'file|f=s'			=> \$file,
+				'preferences|p=s'	=> \$rc_file,
+				'length|l=i'		=> \$length
+	);
+
+	# Read variables from file if an rc file exists
+	if ( -e $rc_file ) {
+		open( RC, $rc_file ) || die "Can't open $rc_file: $!\n";
+
+		foreach my $line ( <RC> ) {
+		
+			$line =~ s/#.*//g;
+
+			if ( $line =~ /token/ ) {
+				$line =~ /token\s*(.*)$/;
+				$token = $1;
+			}
+			if ( $line =~ /wishlist/ ) {
+				$line =~ /wishlist\s*(.*)$/;
+				$wishlist = $1;
+			}
+			if ( $line =~ /maxpages/ ) {
+				$line =~ /maxpages\s*(.*)$/;
+				$maxpages = $1;
+			}
+			if ( $line =~ /extended/ ) {
+				$line =~ /extended\s*(.*)$/;
+				$extended = $1;
+			}
+			if ( $line =~ /file/ ) {
+				$line =~ /file\s*(.*)$/;
+				$file = $1;
+			}
+			if ( $line =~ /length/ ) {
+				$line =~ /length\s*(.*)$/;
+				$length = $1;
+			}
+		}
+
+		close ( RC ) || die "Can't open ~/.amwishrc: $!\n";
+	}
+
+	if ( !defined( $token ) ) {
+		die "You must have an Amazon token!\n";
+	}
+	elsif ( !defined( $wishlist ) ) {
+		die "You must specify the wishlist you wish to use!\n";
+	}
+
+	# Set up initial Amazon object
+	my $ua = Net::Amazon->new(
+		token		=> $token,
+		max_pages	=> $maxpages,
+	);
+
+	# Get wishlist
+	my $req = Net::Amazon::Request::Wishlist->new( 
+		wishlist => $wishlist,
+	);
+
+	# Response is of type Net::Amazon::Response::Wishlist
+	my $resp = $ua->request($req);
+
+	my %item;
+
+	if ( $resp->is_success() ) {
+
+		# Pull entries from Amazon and put them in a hash
+		for my $prop ( $resp->properties ) {
+			my $url = $prop->url();
+
+			if ( $extended ) {
+				$url =~ s/%3ftag=.*//g;
+			}
+
+			my $name = $prop->ProductName();
+			my $desc = $name;
+
+			if ( $length > 0 ) {
+				$name = substr( $name, 0, $length );
+			}
+
+			my $type = $prop->Catalog();
+
+			$item{$type}{$desc}{name} = $name;
+			$item{$type}{$desc}{type} = $type;
+			$item{$type}{$desc}{url} = $url;
+		}
+
+		# Format info for display
+
+		my @lines = ();
+
+		push( @lines, 	ht_div( {'class','wishlist'} ),
+						ht_h( 1, 'Amazon Wishlist' ) );
+
+		foreach my $type ( sort {$a cmp $b} keys %item ) {
+			push( @lines, 	ht_h( 3, $type ),
+							ht_ul( {'class','wishlist'} )
+				);
+			
+			foreach my $desc ( sort {$a cmp $b} keys %{$item{$type}} ) {
+				push( @lines, 	ht_li( {'class','wishlist'},
+								ht_a( $item{$type}{$desc}{url},
+								$item{$type}{$desc}{name} ) )
+					);
+			}
+			push( @lines, ht_uul );
+		}
+		push( @lines, ht_udiv );
+
+		my $fh;
+
+		if ( !defined( $file ) ) {
+			$fh = \*STDOUT;
+			print $fh ( ht_lines( @lines ) );
+		}
+		else {
+			open( $fh, ">$file" ) || die "Can't open file $file: $!\n";
+			print $fh ( ht_lines( @lines ) );
+			close( $fh ) || die "Can't close file $file: $!\n";
+		}
+
+	}
+};
+
+print "Error: $@\n\n" if ( $@ );
+
+#EOF
+1;
+
+__END__
+
+=head1 NAME
+
+blog_amwish - Amazon wishlist generator
+
+=head1 SYNOPSIS
+
+  USAGE: blog_amwish [options]
+    -e|--extended            URL links to extended entry vs. abbreviated
+    -f|--file <file>         Output file (Default: STDOUT)
+    -h|--help                Display this usage
+    -l|--length <integer>    Object name lenght
+    -m|--maxpages <integer>  Maximum pages to retrieve
+    -p|--preferences <file>  Pref. file (Default: ~/.amwishrc)\n",
+    -t|--token <token>       Amazon token
+    -w|--wishlist <wishlist> Amazon wishlist id
+
+=head1 DESCRIPTION
+
+This script will generate a HTML unordered list of links generated from
+an Amazon.com wishlist.
+
+=head1 USER PREFERENCES
+
+You can store all options passed to blog_amwish (except help and
+preferences file) in a file.  By default this file is ~/.amwishrc.  The
+directives in the rc file are the same as the long form parameters
+passed on the command line along with the value seperated by one or more
+spaces or tabs.  You can use a '#' as a comment character.
+
+.amwishrc:
+
+=over 4
+
+token       SAMPLEDONOTUSE
+wishlist    SAMPLE
+extended    1
+file        /home/home_dir/wish_file
+length      25
+maxpages    10
+
+=back
+
+=head1 SEE ALSO
+
+Net::Amazon(3), Net::Amazon::Request::Wishlist(3), KrKit::HTML(3)
+
+=head1 LIMITATIONS
+
+When specifying an output file, if the file exists, it will be
+overwritten.
+
+Dependant on Amazon not changing it's URL structure for generating link
+to full item entry.
+
+=head1 AUTHOR
+
+Paul Espinosa <paul@krkit.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2005 by Paul Espinosa.  All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.5 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut

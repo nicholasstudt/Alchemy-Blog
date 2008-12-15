@@ -1,0 +1,14 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         Alchemy-Blog
+version:      0.43
+version_from: lib/Alchemy/Blog.pm
+installdirs:  site
+requires:
+    Apache2::Request:              0
+    KrKit:                         0
+    XML::RSS:                      1.02
+    XMLRPC::Lite:                  0.55
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.17

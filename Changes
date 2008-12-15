@@ -1,0 +1,356 @@
+Revision history for Perl extension Alchemy::Blog.
+
+-[ Problems To Ponder ]------------------------------------------------
+
+	These are tenative.
+
+	Should be able to use location /, and have it all work.
+		- Just to be fun ;)
+
+	/blog 
+		/main						# Show the default blog.
+			/PAGING					# Allow paging on the frontpage.
+
+		/author						# List all of the authors.
+			/AUTHOR					# List a specfic author.
+
+		/calendar
+				/YEAR				# Show a years archive
+				/YEAR-MONTH			# Show a months archive
+				/YEAR-MONTH-DAY		# Show a days archive
+				
+		/label
+			/LABEL(s)				# Show arhive for a category
+				/PAGING				# Allow for paging.
+
+		/entry					
+			/IDENT					# Show a particular entry.
+				
+
+		/comment					# Show recent comments.
+				/IDENT				# Show article comments
+			/post
+				/IDENT				# Post a comment
+
+	/admin
+			Blog edit
+			Authors
+			Article Types
+			Notification
+			Entrys & Comments
+
+-[ Todo ]--------------------------------------------------------------
+
+
+ 	- A real comment implementation.
+		- Inline or not comments option. ( article override )
+		- Add open comment period. 0 for forever. ( article override,
+		  default in the blog/category )
+		- Comments inline on a story or not by article option.
+		- editable comments, should note that they have been edited in
+		  the public view.
+	- Multiple Authors, and the ability to have different users not able
+	  to edit each others entries.
+		- Authors may be limited to a particular blog.
+		- Pick users to admin a blog... 
+		- Assign authors to a particular blog.
+ 	- Better RSS support.
+ 	- File management for entries.
+	- Entry types to allow for multiple entry formats, think photo blog
+	  vs regular blog vs just link lists.
+		- How do we do blogmarks ? Is it a category option on what to show?
+		- How do I do a photo book ?
+ 	- Simpler interface for posting entries.
+ 	- Built in support for multiple ping hosts.
+	- Multiple archive views: A list, like the current incarnation, and
+	  an actual calendar.
+ 	- Automatic thumbnail generation.
+	- Entry validation, and automatic entry encoding, to simplify
+	  posting for novices.
+	- *Possible* Plug-ins, to allow for stuff, this likely will be a
+	  late addition. 
+	- Ident length may be set by blog.
+	- Add the help documentation.
+	- Allow prev/next by article, like a photoblog does.
+	
+	- Add the ability to manage files and generate links inline.
+
+	- Add the help documentation.
+
+-[ Revision History ]--------------------------------------------------
+
+Figure out why the file upload isn't working.
+
+0.43 Fri Sep  2 08:42:02 CDT 2005
+	- Updating to the Apache2::* naming convention for mod_perl 2.000001
+
+0.42 Sun Mar 20 14:31:53 CST 2005
+	- Added a span around the date for the blog_roll.pl
+
+0.41 Thu Feb 17 20:49:35 CST 2005
+	- Updated the schema for the rewrite. [ns]
+	- Moved to using $site->_decline over returning Apache::DECLINED [ns]
+	- Added blog_amwish to the source tree [pe]
+
+0.40 Thu Dec 23 21:25:10 CST 2004
+	- Ported to mod_perl2
+	- moved Blog.conf to httpd.conf
+	- moved schema.
+	- Everything seems to work with mod_perl2, need to do the file
+	  upload correctly once an answer is found.
+
+0.35 Tue Aug 10 20:43:49 CDT 2004
+	- Fixed another bug in comment deletion.
+
+0.34 Tue Aug 10 08:21:26 CDT 2004
+	- Fixed time formating bug in the blog roll.
+
+0.33 Sat Jul 31 21:25:37 CDT 2004
+	- Moved to using ht_checkbox.
+	- Added the where clause for sql_update.
+
+0.32 Thu Jul 22 21:33:47 CDT 2004
+	- Started on the authors to users link.
+	- Fixed an archive bug.
+	- Adjusted Blog_Post_Days to default to always open, rather than 7
+	  days. This really needs to be put into the database.
+
+0.31 Sat Jul 17 22:03:40 CDT 2004
+	- Added the read/set for coookie comment posters.
+	- Fixed a bug in the counting resulting from a comment being
+	  removed, must use the *correct* id when selecting from the
+	  database.
+	- Flushed out the view unapproved comments page a bit.
+	- Added the email view to all admin comments.
+	- Fixed a problem in the comment classing in the admin pages.
+	- Fixed the classing on comment form for the admin section.
+	- Add recent comments page and a new setvar to limit it.
+	  Blog_Recent_Show, which defaults to 10 comments. 
+	- Put the article title and a link back to the original article  on
+	  the seperate comments page. 
+	- Added comments / read more to the archive pages. Days got the
+	  comments links and their titles linked which the months got the
+	  "Read Full Article" treatment.
+
+0.30 Fri Jul 16 08:43:20 CDT 2004
+	- Fixed article count math. 
+	- fix where admin comments pages redirect too, they now go back to
+	  the particular article view of the comments.
+	- Fixed the bug that doesn't catch www.domain.com in sanitize_text
+	- Fixed the textareas to have sizes for comments.
+
+0.29 Wed Jul 14 21:01:20 CDT 2004
+	- Fixed a bug in the article posting.
+	- Fixed a bug in the force_auth.
+
+0.28 Tue Jul 13 22:11:03 CDT 2004
+	- Adjusted the archive to show all years, rather than just the
+	  current year only.
+	- Stubbed out the Comment admin module.
+	- Moved do_rss from Blog::Viewer to Blog::Viewer::Syndication.do_main
+	- Removed created from the bg_article table, it is not needed.
+	- Removed ident from bg_article_type, it is not needed.
+	- Updated the MANIFEST for the new files.
+	- Added auto-generated idents for articles.
+	- Adjusted internal datefmt, timefmt, and datetimefmt variables to
+	  match the new keys.
+	- Adjusted the internal variables used for the various module roots.
+	  Added a couple of new ones to handle the new modules.
+	- Added $site->section_info( $section_ident ) to grab section
+	  information.
+	- Added $site->author_info( $author_id ) to grab the author info.
+	- Moved the main, ie full, article view out of do_archive and into
+	  do_article. This can be fixed for existing URLs by using the
+	  following mod_rewrite rule:
+	  	RewriteEngine On
+	  	RewriteRule ^/blog/archive/(.*)/(.*)/(.*) /blog/article/$1/$2/$3 [R]
+	- Updated all of the internal links to deal with the archive ->
+	  article move for the main story page.
+	- Posting of comments now works, preliminary support, no nested
+	  comments, and the html stripping does not work yet.
+	- Admin posting of comments, viewing and moderating now works.
+	- Blog_Auth_Names forces authenticated users to use their auth name.
+		- The value 1 says yes use my first name
+		- The value 2 says yes use my full name.
+	- Blog_Post_Days is the number of days comment posting is allowed for.
+	- Adjusted article delete to remove the comments when an article is
+	  deleted.
+
+0.27 Wed Jun 30 09:12:44 CDT 2004
+	- Fixed the bitwise bug in the options for Categories.
+	- Fixed the bitwise bug in the options for Sections.
+	- Fixed the bitwise bug in the options for Articles.
+	- Fixed the bitwise bug in the Viewer.
+	- Added classes around the next and previous links.
+
+0.26 Sat Apr  3 22:12:41 CST 2004
+	- Added the comments module to the Article tree. Stubbed out some of
+	  the comment functions.
+	- Fixed a broken admin link in preview of an article.
+	- Fixed the edit function of Article Types to listen to previous
+	  values of published.
+
+0.25 Tue Mar 16 20:47:24 CST 2004
+	- Added search check for "*" character. It's not valid.
+
+0.24 Sat Mar  6 17:06:07 CST 2004
+	- Added help root.
+
+0.23 Mon Mar  1 21:21:20 CST 2004
+	- Added help hooks to Article as a:bg:a:*
+	- Added help hooks to Article::Author as a:bg:aa:*
+	- Added help hooks to Article::Type as a:bg:at:*
+	- Added help hooks to Section as a:bg:s:*
+	- Added help hooks to Section::Category as a:bg:sc:*
+
+0.22 Sat Feb 28 21:29:29 CST 2004
+	- Fixed the author markup to put the header in a header.
+	- Fixed the markup for search, off by 1 div.
+	- Added blog_roll.pl to grab a blogroll from blo.gs
+
+0.21 Tue Feb 24 22:00:25 CST 2004
+	- Fixed the category and section css to deal with the headers.
+	- Fixed article css to be:
+		<div class="article">
+			<div class="article_header"> </div>
+			<div class="content"> </div>
+			<div class="article_footer"> </div>
+		</div>
+
+0.20 Sun Feb 22 23:00:27 CST 2004
+	- Moved the source around to all be in the new lib/ directory style
+	  of CPAN modules.
+	- Fixed a bug in the search engine.
+	- Fixed a bug in the RSS generation
+	- Fixed to not use the bg_sections.channel field, instead use
+	  bg_sections.name, the bg_sections.channel field has been removed.
+	- Added the option to show the description on the main section page.
+	- Added the option to show the description on the main category page.
+	- Added the ability to actually display the description on the
+	  section main page.
+	- Added the ability to actually display the description on the
+	  category main page.
+	- Fix the section main page to use the framing defined.
+	- Changed the archive date to be 2004-02-11 rather than 2004/02/11
+	- Fixed the archives so the ul break across months correctly.
+	- Adjust RSS for sections and categories segregation, by default it
+	  just shows the default section.
+	- Put the section into the category url, adjusted all links.
+	- Put the section into the archive url, fixed date, and adjusted all
+	  of the links.
+
+0.19 Wed Feb 11 21:01:45 CST 2004
+	- Completed Blog::Section.
+	- Moved Category to Blog::Section::Category.
+	- Moved Author to Blog::Article::Author.
+	- Updated article modules to all "hang together".
+	- Fixed Viewer.do_main to deal with the blog sections.
+	- Fixed Viewer.do_index to deal with blog sections.
+	- Fixed Viewer.do_rss to deal with blog sections.
+	- Adjusted articles for bg_section_id additions.
+	- Fixed the author "view" to show it like the viewer does.
+	- Removed the old setvars for RSS and Frontpage limit.
+
+0.18 Sun Feb  8 22:01:15 CST 2004
+	- Added Blog_PublicRoot to be used by the admin for some of the
+	  links.
+	- Added Blog::Section.
+	- Started on Blog::Section.
+
+0.17 Sun Feb  1 20:32:58 CST 2004
+	- Sorted the category admin main listing.
+	- Started on the search function for the viewer.
+	- Completed the search function.
+
+0.16 Fri Jan 30 21:50:10 CST 2004
+	- Archive is completed. ( For now )
+	- Removed the modified since in the main article admin view.
+	- Switched to published since rather than modified for admin article
+	  search.
+	- Adjusted all article links to use the new do_archive.
+	- Add ability to sort the category ascending or descding by date.
+
+0.15 Wed Jan 28 23:10:46 CST 2004
+	- Moved orginal do_archive to do_article. ( Allows archive to work )
+	- Worked out the complete archive overview
+
+0.14 Sun Jan 25 18:49:02 CST 2004
+	- Added the options to show the category title, display
+	  sub-categories, and to show the full article or a summary to the
+	  category admin.
+	- Applied the above configuration options to do_category in the
+	  Viewer. 
+	- Added paging to the category viewer.
+	- Updated the makefile to reflect the actual required modules.
+
+0.13 Thu Jan 22 22:41:09 CST 2004
+	- Added do_index which shows the category tree.
+	- Added blog_rpc_notify.pl to ping blo.gs.
+
+0.12 Wed Jan 21 22:54:48 CST 2004
+	- Added summary to the bg_article table.
+	- Set up the rss method. This method generates the same output as
+	  the main page, save it is a RSS 2.0 feed and serves up the summary
+	  rather than the content.
+	- Added the ability to set and edit the summaray in the Article
+	  module.
+	- Adjusted the artile listing in the Article module to not show the
+	  published column, it should be obvious from the article type.
+	- Removed the comments and moderated fields from the bg_categories
+	  table, these fields have been relocated to the
+	  bg_article.a_options field.
+	- removed the bg_article.comments field in place of
+	  bg_article.a_options. 
+	- Updated the article admin to deal with a_options field.
+
+0.11 Sat Jan 17 22:59:21 CST 2004
+	- Fixed the bug not allowing an ident to be changed during edit.
+	- Fixed the template display issue in the Viewer.
+	- Adjusted the article admin to show unpublished articles before the
+	  recent published articles.
+	- Adjusted the article preview to actually say preview.
+
+0.10 Sun Jan 11 22:17:23 CST 2004
+	- Added the preview to the admin portion.
+	- Added the "posted by" to the author line.
+
+0.09 Sun Jan 11 16:25:07 CST 2004
+	- removed the user id from the author table, not a really good idea
+	  to start with.
+	- finialized the frontpage behavior.
+	- The viewer is in a mostly usable state. 
+
+0.08 Sat Jan 10 23:44:12 CST 2004
+	- Started on the Viewer module. Having some conceptual problems.
+
+0.07 Sat Jan 10 17:04:00 CST 2004
+	- Complted the article admin.
+
+0.06 Thu Jan  8 22:59:20 CST 2004
+	- Started on the article module.
+	- Completed the add functionality in the article module.
+	- completed categories, edit, and delete on the article module.
+
+0.05 Sun Jan  4 22:50:06 CST 2004
+	- Added the tree traversal code to the Category module.
+	- Completed the category module.
+
+0.04 Sat Jan  3 22:01:06 CST 2004
+	- Finished most of the Category module.
+
+0.03 Sat Jan  3 14:10:03 CST 2004
+	- Added moderated to the sql for the category.
+	- Completed the Author's module.
+	- Added the variable File_URI so we can display images from the
+	  application.
+	- Started on the Category module.
+
+0.02 Fri Jan  2 20:58:18 CST 2004
+	- Completed the module Article::Type.
+	- Started on the Author module. 
+
+0.01 Fri Jan  2 17:07:55 CST 2004
+	- Created the tree by hand. h2xs is not pretty under perl 5.8.1.
+	- All of the needed files have been added. 
+	- Worked out the sql for the application.
+	- Framed out all of the modules.
