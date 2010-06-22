@@ -223,7 +223,7 @@ KrKit(3), perl(3)
 
 =head1 AUTHOR
 
-Nicholas Studt <nstudt@angrydwarf.org>
+Nicholas Studt <nicholas@nicholasstudt.com>
 
 =head1 COPYRIGHT
 
